@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#080b11">
+    <meta name="description" content="Nimbus - AI Agent Platform for iPad">
+    <title>Nimbus - AI Agent Platform</title>
+    <style>
+        :root {
+            --bg-primary: #080b11;
+            --bg-secondary: #0f1420;
+            --bg-tertiary: #161d2e;
+            --bg-card: #1e273e;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: rgba(255, 255, 255, 0.06);
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+
+        #app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .main {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--accent);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: var(--bg-card);
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .message.system {
+            align-self: center;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .message-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .composer-container {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .composer {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px 12px 8px 16px;
+            min-height: 44px;
+            max-height: 200px;
+        }
+
+        .composer textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            max-height: 180px;
+            padding: 8px 0;
+            font-family: inherit;
+        }
+
+        .composer textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .composer textarea:focus {
+            outline: none;
+        }
+
+        .composer button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .composer button:disabled {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .composer button:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+
+        .composer button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .composer-actions {
+            display: flex;
+            gap: 8px;
+            padding-bottom: 4px;
+        }
+
+        .composer-actions button {
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .composer-actions button:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .sidebar-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .welcome {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .welcome h2 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .welcome p {
+            margin-bottom: 24px;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .welcome-actions button {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .welcome-actions button:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent);
+        }
+
+        .settings-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .settings-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .settings-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 0;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .error {
+            color: var(--error);
+            padding: 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            border: 1px solid var(--error);
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px;
+        }
+
+        .info-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .info-card p {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .info-card ul {
+            color: var(--text-secondary);
+            padding-left: 20px;
+        }
+
+        .info-card li {
+            margin-bottom: 8px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .feature-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .feature-card svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        @media (min-width: 768px) and (orientation: landscape) {
+            .main {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .message {
+                max-width: 60%;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .message {
+                max-width: 90%;
+            }
+            .composer {
+                padding: 8px 12px;
+            }
+            .composer textarea {
+                font-size: 0.875rem;
+            }
+        }
+
+        button:focus, textarea:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        ::selection {
+            background: var(--accent);
+            color: white;
+        }
+
+        @-webkit-keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading::after {
+            content: '';
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-muted);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <h1>Nimbus</h1>
+            <div class="header-actions">
+                <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="chat-container" id="chatContainer">
+                <div class="welcome" id="welcome">
+                    <h2>👋 Welcome to Nimbus</h2>
+                    <p>Your AI Agent Platform</p>
+                    <div class="feature-grid">
+                        <div class="feature-card" onclick="showFeature('slack')">
+                            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 12h.01"></path><path d="M12 2a10 10 0 1 0 10 10c0-3.31-1.8-6.2-4.4-7.8"></path><path d="M12 20a8 8 0 1 0-8-8c0 2.2 1.2 4.1 3 5.3"></path></svg>Slack & Teams</h3>
+                            <p>Enterprise collaboration integration</p>
+                        </div>
+                        <div class="feature-card" onclick="showFeature('daily')">
+                            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Daily Brief</h3>
+                            <p>Proactive morning/evening summaries</p>
+                        </div>
+                        <div class="feature-card" onclick="showFeature('teach')">
+                            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>Teach-by-Demo</h3>
+                            <p>Create skills by demonstration</p>
+                        </div>
+                        <div class="feature-card" onclick="showFeature('connectors')">
+                            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>400+ Connectors</h3>
+                            <p>Extensive integration library</p>
+                        </div>
+                        <div class="feature-card" onclick="showFeature('publishing')">
+                            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>Multi-Channel</h3>
+                            <p>Publish agents everywhere</p>
+                        </div>
+                    </div>
+                    <div class="welcome-actions">
+                        <button onclick="startNewChat()">Start Chatting</button>
+                        <button onclick="showHelp()">Help</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="composer-container">
+                <div class="composer">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Type your message..." 
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                    ></textarea>
+                    <button onclick="sendMessage()" id="sendBtn" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="settingsModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: var(--bg-secondary); border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <h2 style="margin-bottom: 20px;">⚙️ Settings</h2>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.875rem;">Backend URL (optional)</label>
+                <input type="text" id="backendUrl" placeholder="https://your-backend.vercel.app" style="width: 100%; padding: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 1rem;">
+                <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px;">Leave empty for local mode</p>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.875rem;">Theme</label>
+                <select id="themeSelect" style="width: 100%; padding: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 1rem;">
+                    <option value="system">System Default</option>
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                <button onclick="closeSettings()" style="padding: 12px 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); border-radius: 8px; cursor: pointer;">Cancel</button>
+                <button onclick="saveSettings()" style="padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let messages = [];
+        let backendUrl = localStorage.getItem('backendUrl') || '';
+        let conversationId = null;
+
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const welcome = document.getElementById('welcome');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const backendUrlInput = document.getElementById('backendUrl');
+        const themeSelect = document.getElementById('themeSelect');
+
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 180) + 'px';
+            sendBtn.disabled = this.value.trim() === '';
+        });
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                if (!sendBtn.disabled) sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            sendBtn.disabled = true;
+            welcome.style.display = 'none';
+
+            addMessage(text, 'user');
+            const typingId = addTypingIndicator();
+
+            try {
+                if (backendUrl) {
+                    const response = await callBackend(text);
+                    removeTypingIndicator(typingId);
+                    addMessage(response, 'assistant');
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                    removeTypingIndicator(typingId);
+                    const localResponse = generateLocalResponse(text);
+                    addMessage(localResponse, 'assistant');
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addMessage(`Error: ${error.message}`, 'assistant');
+            }
+        }
+
+        async function callBackend(message) {
+            try {
+                const response = await fetch(`${backendUrl}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_id: conversationId
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                conversationId = data.conversation_id || conversationId;
+                return data.message || data.response || "No response from backend";
+            } catch (error) {
+                console.error('Backend error:', error);
+                return `Backend connection failed. Using local mode.\n\nTry: ${error.message}`;
+            }
+        }
+
+        function generateLocalResponse(message) {
+            const lower = message.toLowerCase();
+
+            if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
+                return "Hello! 👋 I'm Nimbus, your AI agent platform.\n\n💡 **Quick Start:**\n- Ask me about features\n- Try: 'What can you do?'\n- Or: 'Tell me about Slack'\n\n🚀 **Deployed on Vercel!** This is the web version.";
+            }
+
+            if (lower.includes('what can you do') || lower.includes('help') || lower.includes('?')) {
+                return "🎯 **Nimbus Features:**\n\n✅ **Slack & Teams Integration** - Full MCP server support\n✅ **Daily Brief** - Morning/evening summaries\n✅ **Teach-by-Demo** - Record workflows, create skills\n✅ **400+ Connector Library** - Huge integration ecosystem\n✅ **Multi-Channel Publishing** - Deploy agents everywhere\n\n📱 **iPad Tips:**\n- Add to Home Screen for app-like experience\n- Enable Desktop Mode in Safari\n- Use Split View for multitasking\n\n🔌 **Connect Backend:**\nTap Settings → Add backend URL for full AI";
+            }
+
+            if (lower.includes('slack') || lower.includes('teams')) {
+                return "🔗 **Slack & Microsoft Teams Integration**\n\n✅ **Slack Features:**\n- Send messages to channels/DMs\n- Read channel history\n- Manage threads\n- Add reactions\n- User/channel info\n- Message search\n\n✅ **Teams Features:**\n- Send messages\n- Read channel messages\n- List teams/channels\n- User/team info\n- Create teams/channels\n\n📌 **Setup:**\n1. Install dependencies: `pip install slack-sdk azure-identity msgraph-sdk`\n2. Set environment variables\n3. Use the connectors in your code\n\n💡 **MCP Support:** Both are full MCP servers!";
+            }
+
+            if (lower.includes('daily brief') || lower.includes('digest') || lower.includes('summary')) {
+                return "🌅 **Daily Brief Feature**\n\n⏰ **Schedules:**\n- Morning brief: 8:00 AM (configurable)\n- Evening brief: 6:00 PM (configurable)\n\n📋 **Content:**\n- Today's calendar events\n- Thread updates\n- Agent activity\n- Pending approvals\n- Upcoming reminders\n\n📤 **Delivery Methods:**\n- In-app notification\n- Email\n- Slack DM\n- Teams chat\n\n⚙️ **Customization:**\n- Set your own times\n- Choose delivery methods\n- Enable/disable\n- View history";
+            }
+
+            if (lower.includes('teach') || lower.includes('demonstration') || lower.includes('demo')) {
+                return "🎥 **Teach-by-Demonstration**\n\n🎯 **How it works:**\n1. Start recording\n2. Perform actions (Nimbus records everything)\n3. Stop recording\n4. System extracts patterns\n5. Create reusable skill\n\n📝 **Recorded Actions:**\n- API calls\n- Tool uses\n- UI interactions\n- Agent messages\n- Custom workflows\n\n🔄 **Pattern Extraction:**\n- Workflow structure\n- Parameters/variables\n- Inputs/outputs\n- Conditions/branching\n- Error handling\n\n✨ **Use Cases:**\n- Email triage automation\n- Data processing workflows\n- Multi-step approvals\n- Custom business processes";
+            }
+
+            if (lower.includes('connector') || lower.includes('integration') || lower.includes('library')) {
+                return "🔌 **400+ Connector Library**\n\n📁 **Categories:**\n- Communication: Slack, Teams, Discord, Email, WhatsApp\n- Productivity: Notion, Trello, Asana, ClickUp\n- Development: GitHub, GitLab, Bitbucket, Jira\n- Cloud: AWS, GCP, Azure, DigitalOcean\n- Databases: PostgreSQL, MySQL, MongoDB, Firebase\n- File Storage: S3, Google Drive, Dropbox\n- CRM: Salesforce, HubSpot, Pipedrive\n- Marketing: Mailchimp, SendGrid\n- Analytics: Google Analytics, Mixpanel\n- Payment: Stripe, PayPal, Square\n- Social: Twitter, Facebook, LinkedIn\n- AI: OpenAI, Anthropic, Google\n- Utilities: Weather, News, Translate\n\n✨ **Features:**\n- Auto-discovery\n- Metadata management\n- Category/tag system\n- Dynamic loading\n- Configuration per connector\n- Search/filter\n- Statistics tracking";
+            }
+
+            if (lower.includes('multi') || lower.includes('publish') || lower.includes('channel')) {
+                return "🌐 **Multi-Channel Publishing**\n\n📡 **Supported Channels:**\n- ✅ Discord (bot integration)\n- ✅ Telegram (bot integration)\n- ✅ Slack (uses existing connector)\n- 🔄 WhatsApp (coming soon)\n- 🔄 Email (coming soon)\n- 🔄 Web widgets (coming soon)\n- 🔄 REST API (coming soon)\n\n🔧 **How it works:**\n1. Choose channel type\n2. Configure credentials\n3. Publish your agent\n4. Messages route through channel\n5. Responses return to users\n\n📊 **Features:**\n- Channel handlers\n- Message queues\n- Per-channel configuration\n- Statistics tracking\n- Easy unpublishing\n\n💡 **Use Cases:**\n- Discord bot for your server\n- Telegram bot for teams\n- Slack app for workplace\n- Multi-platform agent deployment";
+            }
+
+            if (lower.includes('vercel') || lower.includes('deploy') || lower.includes('host')) {
+                return "🚀 **Deploying Nimbus on Vercel**\n\n✅ **What you did:**\n- Created a Vercel account\n- Dropped the nimbus_vercel folder\n- Deployed to a live URL\n- Added to iPad Home Screen\n\n📋 **Folder Contents:**\n- index.html (main UI)\n- vercel.json (configuration)\n- All static assets\n\n🔧 **Next Steps:**\n1. Add backend URL in Settings\n2. Connect Slack/Teams\n3. Enable Daily Brief\n4. Try Teach-by-Demo\n5. Explore connectors\n\n💡 **Backend Options:**\n- Railway.app (easiest)\n- Render.com\n- Fly.io\n- Your own server\n\n🎯 **Local Mode:**\nWorks without backend! Ask me about features.";
+            }
+
+            if (lower.includes('ipad') || lower.includes('mobile') || lower.includes('touch')) {
+                return "📱 **Nimbus on iPad**\n\n✨ **Optimized for:**\n- Touch interactions\n- iPad screen sizes\n- Split View multitasking\n- Home Screen app mode\n- Safe area insets\n\n🎯 **Features:**\n- Full-screen mode\n- Touch-friendly buttons\n- Auto-resizing composer\n- Smooth scrolling\n- Dark mode support\n\n⌨️ **Keyboard Shortcuts:**\n- Enter: Send message\n- Shift+Enter: New line\n- Cmd+F: Find\n- Cmd+R: Refresh\n\n💡 **Tips:**\n- Enable Desktop Mode in Safari\n- Add to Dock for quick access\n- Use external keyboard\n- Try Split View with other apps\n\n⚡ **Performance:**\n- Fast loading\n- Smooth animations\n- Minimal battery drain\n- Works offline (local mode)";
+            }
+
+            return "I'm Nimbus, your AI agent platform running on Vercel! 🚀\n\n💬 **Try these:**\n- 'Hello' - Get started\n- 'What can you do?' - Feature list\n- 'Tell me about Slack' - Integration details\n- 'What's daily brief?' - Learn about summaries\n- 'How does teach-by-demo work?' - Workflow recording\n- 'What connectors do you have?' - 400+ library\n- 'What is multi-channel publishing?' - Agent deployment\n\n⚙️ **Settings:**\n- Tap the gear icon to configure backend\n- Local mode works without backend\n- Theme: Light/Dark/System\n\n📱 **iPad Tips:**\n- Add to Home Screen\n- Enable Desktop Mode\n- Use Split View";
+        }
+
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            // Replace newlines with <br>
+            contentDiv.innerHTML = text.replace(/\n/g, '<br>');
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            messageDiv.appendChild(contentDiv);
+            messageDiv.appendChild(timeDiv);
+
+            chatContainer.appendChild(messageDiv);
+            scrollToBottom();
+
+            messages.push({ text, type, time: new Date() });
+        }
+
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typing-indicator';
+
+            const indicatorDiv = document.createElement('div');
+            indicatorDiv.className = 'typing-indicator';
+            indicatorDiv.innerHTML = '<span></span><span></span><span></span>';
+
+            typingDiv.appendChild(indicatorDiv);
+            chatContainer.appendChild(typingDiv);
+            scrollToBottom();
+
+            return 'typing-indicator';
+        }
+
+        function removeTypingIndicator(id) {
+            const element = document.getElementById(id);
+            if (element) element.remove();
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function openSettings() {
+            backendUrlInput.value = backendUrl || '';
+            themeSelect.value = localStorage.getItem('theme') || 'system';
+            settingsModal.style.display = 'flex';
+        }
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+        }
+
+        function saveSettings() {
+            backendUrl = backendUrlInput.value;
+            localStorage.setItem('backendUrl', backendUrl);
+            localStorage.setItem('theme', themeSelect.value);
+            applyTheme();
+            closeSettings();
+        }
+
+        function applyTheme() {
+            const theme = localStorage.getItem('theme') || 'system';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.style.background = '#080b11';
+            }
+        }
+
+        function startNewChat() {
+            messages = [];
+            conversationId = null;
+            chatContainer.innerHTML = '';
+            welcome.style.display = 'block';
+            messageInput.focus();
+        }
+
+        function showHelp() {
+            addMessage("📖 **Nimbus Help**\n\n💬 **Commands:**\n- Type naturally to chat\n- Ask about features\n- Get setup instructions\n\n⚙️ **Settings:**\n- Tap gear icon\n- Configure backend URL\n- Choose theme\n\n📱 **iPad Tips:**\n- Add to Home Screen\n- Enable Desktop Mode\n- Use Split View\n\n🔗 **Backend:**\n- Deploy to Railway/Render\n- Get URL\n- Add to Settings\n\n🚀 **Features:**\n- Slack & Teams\n- Daily Brief\n- Teach-by-Demo\n- 400+ Connectors\n- Multi-Channel Publishing", 'assistant');
+            welcome.style.display = 'none';
+        }
+
+        function showFeature(feature) {
+            const messages = {
+                slack: "🔗 **Slack & Teams Integration**\n\n✅ Full MCP server support\n✅ 8 tools per platform\n✅ Send messages, read history\n✅ Manage threads, reactions\n✅ User/channel info\n\n📌 Setup: pip install slack-sdk azure-identity msgraph-sdk",
+                daily: "🌅 **Daily Brief**\n\n⏰ Morning & evening summaries\n📋 Calendar, threads, agents\n📤 In-app, email, Slack\n⚙️ Configurable times",
+                teach: "🎥 **Teach-by-Demo**\n\n🎯 Record workflows\n📝 Extract patterns\n✨ Create skills\n🔄 Reuse workflows",
+                connectors: "🔌 **400+ Connectors**\n\n📁 13 categories\n✅ Auto-discovery\n✅ Dynamic loading\n✅ Configuration\n✅ Search/filter",
+                publishing: "🌐 **Multi-Channel Publishing**\n\n📡 Discord, Telegram, Slack\n🔧 Channel handlers\n📊 Statistics\n💡 Easy deployment"
+            };
+            addMessage(messages[feature] || "Feature info coming soon!", 'assistant');
+            welcome.style.display = 'none';
+        }
+
+        settingsBtn.addEventListener('click', openSettings);
+
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) closeSettings();
+        });
+
+        backendUrl = localStorage.getItem('backendUrl') || '';
+        applyTheme();
+        messageInput.focus();
+
+        document.addEventListener('focusin', () => {
+            document.body.style.fontSize = '16px';
+        });
+        document.addEventListener('focusout', () => {
+            document.body.style.fontSize = '';
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4dddaf7b9bb5711',t:'MTc5MjU2MDQ2OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
